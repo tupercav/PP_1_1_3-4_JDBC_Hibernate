@@ -11,13 +11,11 @@ public class Util {
     public static Connection getConnection() {
         Connection connection;
         try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(url, username, password);
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         return connection;
     }
-
-
-    // реализуйте настройку соеденения с БД
 }

@@ -3,25 +3,21 @@ package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import javax.swing.plaf.nimbus.State;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
 
+    private Connection connection;
+    private Statement statement;
 
     public UserDaoJDBCImpl() {
-
-    }
-
-
-    Statement statement;
-    {
+        connection = Util.getConnection();
         try {
-            statement = Util.getConnection().createStatement();
-        } catch (SQLException e) {
+            statement = connection.createStatement();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -35,12 +31,10 @@ public class UserDaoJDBCImpl implements UserDao {
                     "  `age` INT(3) NOT NULL,\n" +
                     "  PRIMARY KEY (`id`),\n" +
                     "  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);");
-
             statement.executeBatch();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public void dropUsersTable() {
@@ -49,30 +43,30 @@ public class UserDaoJDBCImpl implements UserDao {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("INSERT INTO users (name, lastName, age) values ('").append(name).append("', '").append(lastName).append("', ").append(age).append(")");
         try {
-            statement.execute(stringBuilder.toString());
-        } catch (SQLException e) {
+            String sql = "INSERT INTO users (name, lastName, age) values (?, ? , ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, lastName);
+            preparedStatement.setByte(3, age);
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public void removeUserById(long id) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("DELETE FROM users where id = ").append(id);
         try {
-            statement.execute(stringBuilder.toString());
+            String sql = "DELETE FROM users where id = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public List<User> getAllUsers() {
@@ -87,6 +81,7 @@ public class UserDaoJDBCImpl implements UserDao {
                 user.setAge(resultSet.getByte(4));
                 users.add(user);
 
+                
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
